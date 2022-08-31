@@ -1,0 +1,52 @@
+package com.fileoperation.service;
+
+import com.fileoperation.entity.ImageData;
+import com.fileoperation.repository.ImageRepository;
+import com.fileoperation.util.ImageUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Optional;
+
+@Service
+public class StorageService {
+
+    @Autowired
+    ImageRepository imageRepository;
+
+
+    //UpLoad Image into database
+    @Transactional
+    public String uploadImage(MultipartFile file) {
+        try {
+            ImageData save = imageRepository.save(ImageData.builder()
+                    .name(file.getOriginalFilename())
+                    .type(file.getContentType())
+                    .imageData(ImageUtil.compressImage(file.getBytes())).build());
+            if(save!=null)
+                return "Image Uploaded Successfully";
+            else
+                return null;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return null;
+
+
+    }
+    //download image from database
+    public byte[] downloadImage(String imageName){
+        byte[] images=null;
+        try {
+            Optional<ImageData> imagedata=imageRepository.findByName(imageName);
+            images= ImageUtil.decompressImage(imagedata.get().getImageData());
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return  images;
+    }
+}
